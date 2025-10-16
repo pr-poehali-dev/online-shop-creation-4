@@ -118,6 +118,35 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(
+        circle at 20% 50%,
+        rgba(217, 217, 217, 0.2) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 80%,
+        rgba(217, 217, 217, 0.15) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 40% 20%,
+        rgba(217, 217, 217, 0.1) 0%,
+        transparent 40%
+      );
+    animation: float 20s ease-in-out infinite;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
     opacity: 0.03;
     background-image:
       repeating-linear-gradient(
@@ -137,6 +166,27 @@
   }
 
   body.dark::before {
+    opacity: 0.3;
+    background:
+      radial-gradient(
+        circle at 30% 40%,
+        rgba(59, 130, 246, 0.08) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 70% 70%,
+        rgba(168, 85, 247, 0.06) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 50% 90%,
+        rgba(59, 130, 246, 0.05) 0%,
+        transparent 40%
+      );
+    animation: float 25s ease-in-out infinite;
+  }
+
+  body.dark::after {
     opacity: 0.02;
     background-image:
       radial-gradient(
@@ -156,6 +206,19 @@
         rgba(255, 255, 255, 0.02) 2px,
         rgba(255, 255, 255, 0.02) 4px
       );
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -30px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
   }
 
   body > div {
