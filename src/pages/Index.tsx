@@ -64,6 +64,7 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'catalog' | 'about'>('catalog');
+  const [priceRange, setPriceRange] = useState<'all' | 'under50' | '50to150' | 'over150'>('all');
 
   const handleAddToCart = (product: Product) => {
     setCartItems((prev) => {
@@ -92,6 +93,13 @@ const Index = () => {
     );
   };
 
+  const filteredProducts = PRODUCTS.filter((product) => {
+    if (priceRange === 'under50') return product.price < 50;
+    if (priceRange === '50to150') return product.price >= 50 && product.price <= 150;
+    if (priceRange === 'over150') return product.price > 150;
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Header
@@ -111,8 +119,43 @@ const Index = () => {
               </p>
             </div>
 
+            <div className="mb-8 flex flex-wrap items-center gap-3">
+              <span className="text-sm font-medium text-muted-foreground">Цена:</span>
+              <Button
+                variant={priceRange === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPriceRange('all')}
+              >
+                Все товары
+              </Button>
+              <Button
+                variant={priceRange === 'under50' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPriceRange('under50')}
+              >
+                До $50
+              </Button>
+              <Button
+                variant={priceRange === '50to150' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPriceRange('50to150')}
+              >
+                $50 - $150
+              </Button>
+              <Button
+                variant={priceRange === 'over150' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPriceRange('over150')}
+              >
+                Свыше $150
+              </Button>
+              <span className="text-sm text-muted-foreground ml-2">
+                Найдено: {filteredProducts.length}
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {PRODUCTS.map((product) => (
+              {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
