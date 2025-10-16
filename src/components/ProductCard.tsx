@@ -14,17 +14,24 @@ export interface Product {
 interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product) => void;
+  currency?: string;
+  isHit?: boolean;
 }
 
-export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+export const ProductCard = ({ product, onAddToCart, currency = '$', isHit = false }: ProductCardProps) => {
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-lg">
-      <div className="aspect-[4/3] overflow-hidden bg-muted">
+      <div className="aspect-[4/3] overflow-hidden bg-muted relative">
         <img
           src={product.image}
           alt={product.name}
           className="h-full w-full object-cover transition-transform group-hover:scale-105"
         />
+        {isHit && (
+          <Badge className="absolute top-3 right-3 bg-destructive text-destructive-foreground">
+            ХИТ
+          </Badge>
+        )}
       </div>
       <CardContent className="p-4">
         <div className="mb-2">
@@ -36,7 +43,7 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {product.description}
         </p>
-        <div className="text-2xl font-bold">${product.price}</div>
+        <div className="text-2xl font-bold">{currency}{product.price}</div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button

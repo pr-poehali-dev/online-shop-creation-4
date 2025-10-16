@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { ProductCard, type Product } from '@/components/ProductCard';
 import { Cart } from '@/components/Cart';
+import { AdminPanel } from '@/components/AdminPanel';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
@@ -61,10 +62,35 @@ const PRODUCTS: Product[] = [
 ];
 
 const Index = () => {
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [currency, setCurrency] = useState<string>('$');
+  const [hitProducts, setHitProducts] = useState<number[]>([1, 3]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'catalog' | 'about'>('catalog');
   const [priceRange, setPriceRange] = useState<'all' | 'under50' | '50to150' | 'over150'>('all');
+
+  useEffect(() => {
+    const savedProducts = localStorage.getItem('products');
+    const savedCurrency = localStorage.getItem('currency');
+    const savedHits = localStorage.getItem('hitProducts');
+    
+    if (savedProducts) setProducts(JSON.parse(savedProducts));
+    if (savedCurrency) setCurrency(savedCurrency);
+    if (savedHits) setHitProducts(JSON.parse(savedHits));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('currency', currency);
+  }, [currency]);
+
+  useEffect(() => {
+    localStorage.setItem('hitProducts', JSON.stringify(hitProducts));
+  }, [hitProducts]);
 
   const handleAddToCart = (product: Product) => {
     setCartItems((prev) => {
@@ -93,7 +119,30 @@ const Index = () => {
     );
   };
 
-  const filteredProducts = PRODUCTS.filter((product) => {
+  const handleAddProduct = (productData: Omit<Product, 'id'>) => {
+    const newProduct = {
+      ...productData,
+      id: Math.max(0, ...products.map(p => p.id)) + 1
+    };
+    setProducts([...products, newProduct]);
+  };
+
+  const handleEditProduct = (updatedProduct: Product) => {
+    setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  };
+
+  const handleDeleteProduct = (id: number) => {
+    setProducts(products.filter(p => p.id !== id));
+    setHitProducts(hitProducts.filter(hitId => hitId !== id));
+  };
+
+  const handleToggleHit = (id: number) => {
+    setHitProducts(prev => 
+      prev.includes(id) ? prev.filter(hitId => hitId !== id) : [...prev, id]
+    );
+  };
+
+  const filteredProducts = products.filter((product) => {
     if (priceRange === 'under50') return product.price < 50;
     if (priceRange === '50to150') return product.price >= 50 && product.price <= 150;
     if (priceRange === 'over150') return product.price > 150;
@@ -160,6 +209,8 @@ const Index = () => {
                   key={product.id}
                   product={product}
                   onAddToCart={handleAddToCart}
+                  currency={currency}
+                  isHit={hitProducts.includes(product.id)}
                 />
               ))}
             </div>
@@ -257,6 +308,17 @@ const Index = () => {
         items={cartItems}
         onRemoveItem={handleRemoveItem}
         onUpdateQuantity={handleUpdateQuantity}
+      />
+
+      <AdminPanel
+        products={products}
+        currency={currency}
+        onAddProduct={handleAddProduct}
+        onEditProduct={handleEditProduct}
+        onDeleteProduct={handleDeleteProduct}
+        onToggleHit={handleToggleHit}
+        onChangeCurrency={setCurrency}
+        hitProducts={hitProducts}
       />
     </div>
   );
