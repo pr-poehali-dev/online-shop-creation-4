@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -10,6 +10,26 @@ interface HeaderProps {
 
 export const Header = ({ cartItemsCount, onCartOpen }: HeaderProps) => {
   const [activeSection, setActiveSection] = useState('catalog');
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    if (!isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -38,6 +58,14 @@ export const Header = ({ cartItemsCount, onCartOpen }: HeaderProps) => {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+          >
+            <Icon name={isDark ? 'Sun' : 'Moon'} size={20} />
+          </Button>
+
           <Button
             variant="outline"
             size="icon"
