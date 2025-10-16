@@ -4,6 +4,7 @@ import { ProductCard, type Product } from '@/components/ProductCard';
 import { Cart } from '@/components/Cart';
 import { AdminPanel } from '@/components/AdminPanel';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 
 interface CartItem extends Product {
@@ -68,7 +69,9 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'catalog' | 'about'>('catalog');
-  const [priceRange, setPriceRange] = useState<'all' | 'under50' | '50to150' | 'over150'>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
 
   useEffect(() => {
     const savedProducts = localStorage.getItem('products');
@@ -143,10 +146,17 @@ const Index = () => {
   };
 
   const filteredProducts = products.filter((product) => {
-    if (priceRange === 'under50') return product.price < 50;
-    if (priceRange === '50to150') return product.price >= 50 && product.price <= 150;
-    if (priceRange === 'over150') return product.price > 150;
-    return true;
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery === '' || 
+      product.name.toLowerCase().includes(searchLower) ||
+      product.description.toLowerCase().includes(searchLower) ||
+      product.category.toLowerCase().includes(searchLower);
+
+    const min = minPrice ? parseFloat(minPrice) : 0;
+    const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+    const matchesPrice = product.price >= min && product.price <= max;
+
+    return matchesSearch && matchesPrice;
   });
 
   return (
@@ -168,39 +178,53 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="mb-8 flex flex-wrap items-center gap-3">
-              <span className="text-sm font-medium text-muted-foreground">Цена:</span>
-              <Button
-                variant={priceRange === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPriceRange('all')}
-              >
-                Все товары
-              </Button>
-              <Button
-                variant={priceRange === 'under50' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPriceRange('under50')}
-              >
-                До $50
-              </Button>
-              <Button
-                variant={priceRange === '50to150' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPriceRange('50to150')}
-              >
-                $50 - $150
-              </Button>
-              <Button
-                variant={priceRange === 'over150' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPriceRange('over150')}
-              >
-                Свыше $150
-              </Button>
-              <span className="text-sm text-muted-foreground ml-2">
-                Найдено: {filteredProducts.length}
-              </span>
+            <div className="mb-8 space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Поиск товаров..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Цена:</span>
+                  <Input
+                    type="number"
+                    placeholder="От"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-24"
+                  />
+                  <span className="text-muted-foreground">-</span>
+                  <Input
+                    type="number"
+                    placeholder="До"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-24"
+                  />
+                  {(minPrice || maxPrice || searchQuery) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setMinPrice('');
+                        setMaxPrice('');
+                        setSearchQuery('');
+                      }}
+                    >
+                      <Icon name="X" size={16} className="mr-1" />
+                      Очистить
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Найдено товаров: {filteredProducts.length}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
