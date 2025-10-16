@@ -3,6 +3,7 @@ import { Header } from '@/components/Header';
 import { ProductCard, type Product } from '@/components/ProductCard';
 import { Cart } from '@/components/Cart';
 import { AdminPanel } from '@/components/AdminPanel';
+import { AdBanner, type Ad } from '@/components/AdBanner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
@@ -62,10 +63,23 @@ const PRODUCTS: Product[] = [
   }
 ];
 
+const INITIAL_ADS: Ad[] = [
+  {
+    id: 1,
+    title: 'Профессиональные курсы',
+    description: 'Обучайтесь у лучших экспертов',
+    image: 'https://cdn.poehali.dev/projects/0598ef78-45b2-4d7a-9b03-ab91c1dc224f/files/b8fb4711-8547-43d6-b23e-60880d818579.jpg',
+    link: 'https://example.com',
+    type: 'horizontal',
+    active: true
+  }
+];
+
 const Index = () => {
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [currency, setCurrency] = useState<string>('$');
   const [hitProducts, setHitProducts] = useState<number[]>([1, 3]);
+  const [ads, setAds] = useState<Ad[]>(INITIAL_ADS);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'catalog' | 'about'>('catalog');
@@ -77,10 +91,12 @@ const Index = () => {
     const savedProducts = localStorage.getItem('products');
     const savedCurrency = localStorage.getItem('currency');
     const savedHits = localStorage.getItem('hitProducts');
+    const savedAds = localStorage.getItem('ads');
     
     if (savedProducts) setProducts(JSON.parse(savedProducts));
     if (savedCurrency) setCurrency(savedCurrency);
     if (savedHits) setHitProducts(JSON.parse(savedHits));
+    if (savedAds) setAds(JSON.parse(savedAds));
   }, []);
 
   useEffect(() => {
@@ -94,6 +110,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('hitProducts', JSON.stringify(hitProducts));
   }, [hitProducts]);
+
+  useEffect(() => {
+    localStorage.setItem('ads', JSON.stringify(ads));
+  }, [ads]);
 
   const handleAddToCart = (product: Product) => {
     setCartItems((prev) => {
@@ -144,6 +164,28 @@ const Index = () => {
       prev.includes(id) ? prev.filter(hitId => hitId !== id) : [...prev, id]
     );
   };
+
+  const handleAddAd = (adData: Omit<Ad, 'id'>) => {
+    const newAd = {
+      ...adData,
+      id: Math.max(0, ...ads.map(a => a.id)) + 1
+    };
+    setAds([...ads, newAd]);
+  };
+
+  const handleEditAd = (updatedAd: Ad) => {
+    setAds(ads.map(a => a.id === updatedAd.id ? updatedAd : a));
+  };
+
+  const handleDeleteAd = (id: number) => {
+    setAds(ads.filter(a => a.id !== id));
+  };
+
+  const handleToggleAdActive = (id: number) => {
+    setAds(ads.map(a => a.id === id ? { ...a, active: !a.active } : a));
+  };
+
+  const activeAds = ads.filter(ad => ad.active);
 
   const filteredProducts = products.filter((product) => {
     const searchLower = searchQuery.toLowerCase();
@@ -227,21 +269,46 @@ const Index = () => {
               </div>
             </div>
 
+            {activeAds.length > 0 && (
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeAds.slice(0, 2).map((ad) => (
+                  <AdBanner key={ad.id} ad={ad} />
+                ))}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {filteredProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="animate-fade-up opacity-0"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <ProductCard
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    currency={currency}
-                    isHit={hitProducts.includes(product.id)}
-                  />
-                </div>
-              ))}
+              {filteredProducts.map((product, index) => {
+                const shouldShowAd = (index + 1) % 6 === 0 && activeAds.length > 2;
+                const adIndex = Math.floor(index / 6) + 2;
+                const ad = activeAds[adIndex % activeAds.length];
+
+                return (
+                  <>
+                    <div
+                      key={product.id}
+                      className="animate-fade-up opacity-0"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <ProductCard
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        currency={currency}
+                        isHit={hitProducts.includes(product.id)}
+                      />
+                    </div>
+                    {shouldShowAd && ad && (
+                      <div 
+                        key={`ad-${ad.id}-${index}`}
+                        className="animate-fade-up opacity-0 md:col-span-2 lg:col-span-3"
+                        style={{ animationDelay: `${(index + 1) * 0.1}s` }}
+                      >
+                        <AdBanner ad={ad} />
+                      </div>
+                    )}
+                  </>
+                );
+              })}
             </div>
           </>
         ) : (
@@ -348,6 +415,11 @@ const Index = () => {
         onToggleHit={handleToggleHit}
         onChangeCurrency={setCurrency}
         hitProducts={hitProducts}
+        ads={ads}
+        onAddAd={handleAddAd}
+        onEditAd={handleEditAd}
+        onDeleteAd={handleDeleteAd}
+        onToggleAdActive={handleToggleAdActive}
       />
     </div>
   );
