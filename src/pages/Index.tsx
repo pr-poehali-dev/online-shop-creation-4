@@ -228,14 +228,19 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {filteredProducts.map((product) => (
-                <ProductCard
+              {filteredProducts.map((product, index) => (
+                <div
                   key={product.id}
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                  currency={currency}
-                  isHit={hitProducts.includes(product.id)}
-                />
+                  className="animate-fade-up opacity-0"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <ProductCard
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    currency={currency}
+                    isHit={hitProducts.includes(product.id)}
+                  />
+                </div>
               ))}
             </div>
           </>
